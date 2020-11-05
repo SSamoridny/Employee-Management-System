@@ -2,13 +2,13 @@
 const env = require('dotenv');
 const mysql = require('mysql');
 const inquirer = require('inquirer');
-const console = require('console.table')
+const consoleTable = require('console.table')
 
 // Creation of connection
 const connection = mysql.createConnection({
     host: 'localhost',
     // Your port; if not 3306
-    port: process.env.PORT,
+    port: 3306,
     // Your username
     user: 'root',//process.env.DB_USER,
     // Your password
@@ -17,7 +17,7 @@ const connection = mysql.createConnection({
 });
 
 connection.connect(function (err) {
-    //console.log('connected')
+    console.log('connected')
     if (err) throw err;
 });
 
@@ -44,7 +44,7 @@ const userQuestions = function() {
         //console.log(answer);
         // Switch statement with user choices
         switch (answer.userQuestions) {
-          case "view all employees":
+          case "View all employees":
             viewEmployees();
             break;
   
@@ -79,7 +79,7 @@ const userQuestions = function() {
   // Function to allow the user to see all of the available departments
 function viewDepts() {
     connection.query("SELECT * FROM department", function(err, answer) {
-      console.log('Departments Retrieved from Database');
+      //console.log('Departments Retrieved from Database');
       console.table(answer);
     });
     userQuestions();
@@ -88,7 +88,7 @@ function viewDepts() {
   // Function to show the user all of the available employee roles
 function viewRoles() {
     connection.query("SELECT * FROM role", function(err, answer) {
-      console.log('Roles Retrieved from Database');
+      //console.log('Roles Retrieved from Database');
       console.table(answer);
     });
     userQuestions();
@@ -96,26 +96,14 @@ function viewRoles() {
 
   // Function to show all of the employees available
 function viewEmployees() {
-    console.log('retrieving employess from database');
+    //console.log('retrieving employess from database');
     const infoQuery =
       "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department on role.department_id = department.id;";
     connection.query(infoQuery, function(err, answer) {
-      console.log('Employees retrieved from Database');
+      //console.log('Employees retrieved from Database');
       console.table(answer);
     });
     userQuestions();
-  }
-
-  // allows user to view all employees currently in the database
-function viewEmployees() {
-    console.log("retrieving employess from database");
-    const infoQuery =
-      "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department on role.department_id = department.id;";
-    connection.query(infoQuery, function(err, answer) {
-      console.log('Employees retrieved from Database');
-      console.table(answer);
-    });
-    askQ();
   }
   
   // Function for adding a new employee to the database
@@ -196,4 +184,68 @@ function updateEmployeeRole() {
           );
         });
     });
+  }
+
+  // Function to add a new department to the db
+function addDept() {
+    inquirer
+      .prompt({
+        type: "input",
+        message: "enter department name",
+        name: "dept"
+      })
+      .then(function(answer) {
+        connection.query(
+          "INSERT INTO department SET ?",
+          {
+            name: answer.dept
+          },
+          function(err, answer) {
+            if (err) {
+              throw err;
+            }
+          }
+        ),
+          console.table(answer);
+          userQuestions();
+      });
+  }
+
+  // Function to add a new role or title to existing employee
+function addRole() {
+    inquirer
+      .prompt([
+        {
+          type: "input",
+          message: "enter employee title",
+          name: "addtitle"
+        },
+        {
+          type: "input",
+          message: "enter employee salary",
+          name: "addsalary"
+        },
+        {
+          type: "input",
+          message: "enter employee department id",
+          name: "addDepId"
+        }
+      ])
+      .then(function(answer) {
+        connection.query(
+          "INSERT INTO role SET ?",
+          {
+            title: answer.addtitle,
+            salary: answer.addsalary,
+            department_id: answer.addDepId
+          },
+          function(err, answer) {
+            if (err) {
+              throw err;
+            }
+            console.table(answer);
+          }
+        );
+        userQuestions();
+      });
   }
