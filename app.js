@@ -1,4 +1,5 @@
 // Dependencies
+const env = require('dotenv');
 const mysql = require('mysql');
 const inquirer = require('inquirer');
 const console = require('console.table')
@@ -7,12 +8,12 @@ const console = require('console.table')
 const connection = mysql.createConnection({
     host: 'localhost',
     // Your port; if not 3306
-    port: 3306,
+    port: PORT,
     // Your username
-    user: "root",
+    user: DB_USER,
     // Your password
-    password: "Maiyapapaya1!",
-    database: "employeeTracker"
+    password: DB_PWD,
+    database: DB_NAME
 });
 
 connection.connect(function (err) {
@@ -44,15 +45,15 @@ const userQuestions = function() {
         // start of switch statment for user choice
         switch (answer.userQuestions) {
           case "view all employees":
-            viewallemployees();
+            viewEmployees();
             break;
   
           case "view all roles":
-            viewallroles();
+            viewRoles();
             break;
   
           case "view all departments":
-            viewalldepartments();
+            viewDepts();
             break;
   
           case "add employee":
@@ -60,11 +61,11 @@ const userQuestions = function() {
             break;
   
           case "update employee role":
-            updateEmpRole();
+            updateEmployeeRole();
             break;
   
           case "add department":
-            addDepartment();
+            addDept();
             break;
   
           case "add role":
