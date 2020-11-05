@@ -8,16 +8,16 @@ const console = require('console.table')
 const connection = mysql.createConnection({
     host: 'localhost',
     // Your port; if not 3306
-    port: PORT,
+    port: process.env.PORT,
     // Your username
-    user: DB_USER,
+    user: 'root',//process.env.DB_USER,
     // Your password
-    password: DB_PWD,
-    database: DB_NAME
+    password: 'Maiyapapaya1!',//process.env.DB_PWD,
+    database: "employeeTracker",//process.env.DB_NAME
 });
 
 connection.connect(function (err) {
-    console.log('connected')
+    //console.log('connected')
     if (err) throw err;
 });
 
@@ -30,48 +30,170 @@ const userQuestions = function() {
         name: "userQuestions",
         message: "What would you like to do?",
         choices: [
-          "view all employees",
-          "view all roles",
-          "view all departments",
-          "add employee",
-          "add department",
-          "add role",
-          "update employee role",
-          "remove employee"
+          "View all employees",
+          "View all roles",
+          "View all departments",
+          "Add an employee",
+          "Add a department",
+          "Add a role",
+          "Update an employee role",
+          "Remove an employee"
         ]
       })
       .then(function(answer) {
-        console.log(answer);
-        // start of switch statment for user choice
+        //console.log(answer);
+        // Switch statement with user choices
         switch (answer.userQuestions) {
           case "view all employees":
             viewEmployees();
             break;
   
-          case "view all roles":
+          case "View all roles":
             viewRoles();
             break;
   
-          case "view all departments":
+          case "View all departments":
             viewDepts();
             break;
   
-          case "add employee":
+          case "Add an employee":
             addEmployee();
             break;
   
-          case "update employee role":
+          case "Update an employee role":
             updateEmployeeRole();
             break;
   
-          case "add department":
+          case "Add a department":
             addDept();
             break;
   
-          case "add role":
+          case "Add a role":
             addRole();
             break;
         }
       });
   };
   userQuestions();
+
+  // Function to allow the user to see all of the available departments
+function viewDepts() {
+    connection.query("SELECT * FROM department", function(err, answer) {
+      console.log('Departments Retrieved from Database');
+      console.table(answer);
+    });
+    userQuestions();
+  }
+
+  // Function to show the user all of the available employee roles
+function viewRoles() {
+    connection.query("SELECT * FROM role", function(err, answer) {
+      console.log('Roles Retrieved from Database');
+      console.table(answer);
+    });
+    userQuestions();
+  }
+
+  // Function to show all of the employees available
+function viewEmployees() {
+    console.log('retrieving employess from database');
+    const infoQuery =
+      "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department on role.department_id = department.id;";
+    connection.query(infoQuery, function(err, answer) {
+      console.log('Employees retrieved from Database');
+      console.table(answer);
+    });
+    userQuestions();
+  }
+
+  // allows user to view all employees currently in the database
+function viewEmployees() {
+    console.log("retrieving employess from database");
+    const infoQuery =
+      "SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department on role.department_id = department.id;";
+    connection.query(infoQuery, function(err, answer) {
+      console.log('Employees retrieved from Database');
+      console.table(answer);
+    });
+    askQ();
+  }
+  
+  // Function for adding a new employee to the database
+  function addEmployee() {
+    inquirer
+      .prompt([
+        {
+          type: "input",
+          message: "Enter employee first name",
+          name: "firstname"
+        },
+        {
+          type: "input",
+          message: "Enter employee last name",
+          name: "lastname"
+        }
+      ])
+      .then(function(answer) {
+        connection.query(
+          "INSERT INTO employee SET ?",
+          {
+            first_name: answer.firstname,
+            last_name: answer.lastname,
+            role_id: null,
+            manager_id: null
+          },
+          function(err, answer) {
+            if (err) {
+              throw err;
+            }
+            console.table(answer);
+          }
+        );
+        userQuestions();
+      });
+  }
+
+  // Function to allow the user to select an employee to update from the db
+function updateEmployeeRole() {
+    let allemp = [];
+    connection.query("SELECT * FROM employee", function(err, answer) {
+      for (let i = 0; i < answer.length; i++) {
+        let employeeString =
+          answer[i].id + ' ' + answer[i].first_name + ' ' + answer[i].last_name;
+        allemp.push(employeeString);
+      }
+  
+      inquirer
+        .prompt([
+          {
+            type: "list",
+            name: "updateEmpRole",
+            message: "select employee to update role",
+            choices: allemp
+          },
+          {
+            type: "list",
+            message: "select new role",
+            choices: ["manager", "employee"],
+            name: "newrole"
+          }
+        ])
+        .then(function(answer) {
+          console.log("about to update", answer);
+          const updateID = {};
+          updateID.employeeId = parseInt(answer.updateEmpRole.split(" ")[0]);
+          if (answer.newrole === "manager") {
+            updateID.role_id = 1;
+          } else if (answer.newrole === "employee") {
+            updateID.role_id = 2;
+          }
+          connection.query(
+            "UPDATE employee SET role_id = ? WHERE id = ?",
+            [updateID.role_id, updateID.employeeId],
+            function(err, data) {
+            userQuestions();
+            }
+          );
+        });
+    });
+  }
