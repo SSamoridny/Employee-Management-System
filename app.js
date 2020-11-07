@@ -141,7 +141,7 @@ function addEmployee() {
           if (err) {
             throw err;
           }
-          console.log(answer);
+          //console.log(answer);
         }
       );
       userQuestions();
@@ -169,12 +169,12 @@ function updateEmployeeRole() {
         {
           type: 'list',
           message: 'select new role',
-          choices: ['manager', 'employee'],
+          choices: ['manager', 'employee',],
           name: 'newrole'
         }
       ])
       .then(function (answer) {
-        console.log('about to update', answer);
+        //console.log('about to update', answer);
         const updateID = {};
         updateID.employeeId = parseInt(answer.updateEmpRole.split(" ")[0]);
         if (answer.newrole === 'manager') {
@@ -283,8 +283,7 @@ function removeEmployee() {
             employee = employeeid.id;
         })
         connection.query("DELETE FROM employee WHERE id =?", employee);
-        console.log(employee)
-        //     
+        //console.log(employee)    
       })
     });
 }
